@@ -1,0 +1,23 @@
+{
+  "name": "ql-rap-chieu-phim-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend for QL-RAP-CHIEU-PHIM",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mssql": "^11.0.1",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
