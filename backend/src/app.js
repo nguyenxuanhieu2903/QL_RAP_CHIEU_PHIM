@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 
+const routes = require('./routes');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
@@ -31,6 +32,8 @@ app.get('/health', (req, res) => {
 // ========================
 // Global Error Handler
 // ========================
+
+app.use('/api', routes);
 
 app.use(errorMiddleware);
 
