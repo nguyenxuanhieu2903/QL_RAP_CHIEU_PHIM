@@ -1,4 +1,5 @@
 const AppError = require('../../utils/error');
+
 const {
     hashPassword,
     comparePassword,
@@ -15,6 +16,7 @@ const register = async ({
     fullName,
     phone,
 }) => {
+    // 1. Check username
     const existingAccount =
         await authRepository.findAccountByUsername(username);
 
@@ -25,6 +27,7 @@ const register = async ({
         );
     }
 
+    // 2. Check email
     const existingCustomer =
         await authRepository.findCustomerByEmail(email);
 
@@ -35,9 +38,11 @@ const register = async ({
         );
     }
 
+    // 3. Hash password
     const passwordHash =
         await hashPassword(password);
 
+    // 4. Create customer
     const customerId =
         await authRepository.createCustomer({
             fullName,
@@ -45,15 +50,16 @@ const register = async ({
             email,
         });
 
+    // 5. Create account
     const accountId =
         await authRepository.createAccount({
             username,
             passwordHash,
-            email,
             roleId: 1,
             customerId,
         });
 
+    // 6. Generate JWT
     const token = generateToken({
         userId: accountId,
         role: 'CUSTOMER',
@@ -76,6 +82,7 @@ const login = async ({
     username,
     password,
 }) => {
+    // 1. Find account
     const account =
         await authRepository.findAccountByUsername(username);
 
@@ -86,13 +93,15 @@ const login = async ({
         );
     }
 
-    if (!account.TrangThaiTaiKhoan) {
+    // 2. Check account status
+    if (account.TrangThaiTaiKhoan !== 'ACTIVE') {
         throw new AppError(
             'Account is inactive',
             403
         );
     }
 
+    // 3. Compare password
     const isPasswordValid =
         await comparePassword(
             password,
@@ -106,21 +115,22 @@ const login = async ({
         );
     }
 
+    // 4. Generate JWT
     const token = generateToken({
-        userId: account.MaTaiKhoan_PK,
+        userId: account.MaTaiKhoan,
         role: account.TenRole,
-        customerId: account.MaKhachHang_FK,
-        employeeId: account.MaNhanVien_FK,
+        customerId: account.MaKhachHang,
+        employeeId: account.MaNhanVien,
     });
 
     return {
         user: {
-            userId: account.MaTaiKhoan_PK,
+            userId: account.MaTaiKhoan,
             username: account.TenDangNhap,
             email: account.Email,
             role: account.TenRole,
-            customerId: account.MaKhachHang_FK,
-            employeeId: account.MaNhanVien_FK,
+            customerId: account.MaKhachHang,
+            employeeId: account.MaNhanVien,
         },
         token,
     };
@@ -138,12 +148,12 @@ const getMe = async (userId) => {
     }
 
     return {
-        userId: account.MaTaiKhoan_PK,
+        userId: account.MaTaiKhoan,
         username: account.TenDangNhap,
         email: account.Email,
         role: account.TenRole,
-        customerId: account.MaKhachHang_FK,
-        employeeId: account.MaNhanVien_FK,
+        customerId: account.MaKhachHang,
+        employeeId: account.MaNhanVien,
         status: account.TrangThaiTaiKhoan,
     };
 };
