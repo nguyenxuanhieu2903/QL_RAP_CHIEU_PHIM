@@ -2,7 +2,8 @@ const { getConnection, sql } = require('../../config/database');
 const { NotFoundError, ConflictError } = require('../../utils/error');
 
 class CinemasRepository {
-    // Lấy danh sách rạp với phân trang
+    
+    // Lấy danh sách rạp 
     async findAll(page = 1, limit = 10, keyword = '') {
         try {
             const pool = await getConnection();
@@ -13,23 +14,17 @@ class CinemasRepository {
                     MaRap,
                     TenRap,
                     DiaChi,
-                    SDT,
-                    Email,
-                    TrangThai,
-                    CreatedAt,
-                    UpdatedAt
+                    Hotline 
                 FROM RAP
-                WHERE TrangThai = 1
             `;
 
             const params = [];
 
             if (keyword) {
-                query += ` AND (TenRap LIKE @keyword OR DiaChi LIKE @keyword)`;
+                query += ` WHERE (TenRap LIKE @keyword OR DiaChi LIKE @keyword)`;
                 params.push({ name: 'keyword', value: `%${keyword}%`, type: sql.NVarChar });
             }
 
-            // Lấy tổng số bản ghi
             const countQuery = query.replace(
                 /SELECT .* FROM RAP/,
                 'SELECT COUNT(*) as total FROM RAP'
@@ -41,7 +36,6 @@ class CinemasRepository {
             });
             const total = await countResult.query(countQuery);
 
-            // Lấy dữ liệu phân trang
             query += ` ORDER BY TenRap ASC OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
             const dataResult = await pool.request();
             dataResult.input('offset', sql.Int, offset);
@@ -62,7 +56,7 @@ class CinemasRepository {
         }
     }
 
-    // Lấy chi tiết rạp theo ID
+    // Lấy chi tiết rạp
     async findById(id) {
         try {
             const pool = await getConnection();
@@ -73,11 +67,7 @@ class CinemasRepository {
                         MaRap,
                         TenRap,
                         DiaChi,
-                        SDT,
-                        Email,
-                        TrangThai,
-                        CreatedAt,
-                        UpdatedAt
+                        Hotline
                     FROM RAP
                     WHERE MaRap = @MaRap
                 `);
@@ -91,47 +81,40 @@ class CinemasRepository {
         }
     }
 
-    // Kiểm tra tên rạp đã tồn tại
-    async existsByName(tenRap, excludeId = null) {
-        try {
-            const pool = await getConnection();
-            let query = `SELECT COUNT(*) as count FROM RAP WHERE TenRap = @tenRap`;
-            const request = pool.request().input('tenRap', sql.NVarChar, tenRap);
-            
-            if (excludeId) {
-                query += ` AND MaRap != @excludeId`;
-                request.input('excludeId', sql.Int, excludeId);
-            }
-
-            const result = await request.query(query);
-            return result.recordset[0].count > 0;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    // Tạo mới rạp
+    // Tạo rạp mới
     async create(cinemaData) {
         try {
             const pool = await getConnection();
-            const result = await pool.request()
-                .input('TenRap', sql.NVarChar, cinemaData.tenRap)
-                .input('DiaChi', sql.NVarChar, cinemaData.diaChi)
-                .input('SDT', sql.NVarChar, cinemaData.sdt)
-                .input('Email', sql.NVarChar, cinemaData.email || null)
-                .input('TrangThai', sql.Bit, cinemaData.trangThai !== undefined ? cinemaData.trangThai : 1)
-                .query(`
-                    INSERT INTO RAP (TenRap, DiaChi, SDT, Email, TrangThai)
-                    OUTPUT INSERTED.MaRap
-                    VALUES (@TenRap, @DiaChi, @SDT, @Email, @TrangThai)
-                `);
-
-            const id = result.recordset[0].MaRap;
-            return await this.findById(id);
-        } catch (error) {
-            if (error.message.includes('duplicate')) {
+            
+            // Kiểm tra tên trùng
+            const check = await pool.request()
+                .input('TenRap', sql.NVarChar, cinemaData.TenRap)
+                .query(`SELECT COUNT(*) as count FROM RAP WHERE TenRap = @TenRap`);
+            
+            if (check.recordset[0].count > 0) {
                 throw new ConflictError('Tên rạp đã tồn tại');
             }
+
+            const result = await pool.request()
+                .input('TenRap', sql.NVarChar, cinemaData.TenRap)
+                .input('DiaChi', sql.NVarChar, cinemaData.DiaChi)
+                .input('Hotline', sql.NVarChar, cinemaData.Hotline)  
+                .query(`
+                    INSERT INTO RAP (MaRap, TenRap, DiaChi, Hotline)
+                    VALUES (
+                        (SELECT ISNULL(MAX(MaRap), 0) + 1 FROM RAP),
+                        @TenRap,
+                        @DiaChi,
+                        @Hotline
+                    )
+                `);
+
+            // Lấy ID vừa tạo
+            const idResult = await pool.request()
+                .query(`SELECT MAX(MaRap) as MaRap FROM RAP`);
+            
+            return await this.findById(idResult.recordset[0].MaRap);
+        } catch (error) {
             throw error;
         }
     }
@@ -143,25 +126,17 @@ class CinemasRepository {
             const updates = [];
             const request = pool.request().input('MaRap', sql.Int, id);
 
-            if (cinemaData.tenRap !== undefined) {
+            if (cinemaData.TenRap !== undefined) {
                 updates.push('TenRap = @TenRap');
-                request.input('TenRap', sql.NVarChar, cinemaData.tenRap);
+                request.input('TenRap', sql.NVarChar, cinemaData.TenRap);
             }
-            if (cinemaData.diaChi !== undefined) {
+            if (cinemaData.DiaChi !== undefined) {
                 updates.push('DiaChi = @DiaChi');
-                request.input('DiaChi', sql.NVarChar, cinemaData.diaChi);
+                request.input('DiaChi', sql.NVarChar, cinemaData.DiaChi);
             }
-            if (cinemaData.sdt !== undefined) {
-                updates.push('SDT = @SDT');
-                request.input('SDT', sql.NVarChar, cinemaData.sdt);
-            }
-            if (cinemaData.email !== undefined) {
-                updates.push('Email = @Email');
-                request.input('Email', sql.NVarChar, cinemaData.email);
-            }
-            if (cinemaData.trangThai !== undefined) {
-                updates.push('TrangThai = @TrangThai');
-                request.input('TrangThai', sql.Bit, cinemaData.trangThai);
+            if (cinemaData.Hotline !== undefined) {
+                updates.push('Hotline = @Hotline');
+                request.input('Hotline', sql.NVarChar, cinemaData.Hotline);
             }
 
             if (updates.length === 0) {
@@ -170,7 +145,7 @@ class CinemasRepository {
 
             const query = `
                 UPDATE RAP
-                SET ${updates.join(', ')}, UpdatedAt = GETDATE()
+                SET ${updates.join(', ')}
                 WHERE MaRap = @MaRap
             `;
 
@@ -181,53 +156,32 @@ class CinemasRepository {
         }
     }
 
-    // Xóa rạp (soft delete)
+    // Xóa rạp 
     async delete(id) {
         try {
             const pool = await getConnection();
             
-            // Kiểm tra rạp có tồn tại không
             const cinema = await this.findById(id);
             if (!cinema) {
                 throw new NotFoundError('Không tìm thấy rạp');
             }
 
-            // Kiểm tra rạp có đang được sử dụng không
-            const usageCheck = await pool.request()
+            // Kiểm tra rạp có phòng không
+            const roomCheck = await pool.request()
                 .input('MaRap', sql.Int, id)
                 .query(`
-                    SELECT COUNT(*) as count FROM PHONG WHERE MaRap = @MaRap AND TrangThai = 1
+                    SELECT COUNT(*) as count FROM PHONG_CHIEU WHERE MaRap = @MaRap
                 `);
 
-            if (usageCheck.recordset[0].count > 0) {
-                throw new ConflictError('Rạp đang có phòng đang hoạt động, không thể xóa');
+            if (roomCheck.recordset[0].count > 0) {
+                throw new ConflictError('Rạp đang có phòng, không thể xóa');
             }
 
-            // Soft delete
             await pool.request()
                 .input('MaRap', sql.Int, id)
-                .query(`
-                    UPDATE RAP
-                    SET TrangThai = 0, UpdatedAt = GETDATE()
-                    WHERE MaRap = @MaRap
-                `);
+                .query(`DELETE FROM RAP WHERE MaRap = @MaRap`);
 
             return true;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    // Lấy số lượng rạp
-    async count(activeOnly = true) {
-        try {
-            const pool = await getConnection();
-            const query = activeOnly 
-                ? `SELECT COUNT(*) as total FROM RAP WHERE TrangThai = 1`
-                : `SELECT COUNT(*) as total FROM RAP`;
-            
-            const result = await pool.request().query(query);
-            return result.recordset[0].total;
         } catch (error) {
             throw error;
         }

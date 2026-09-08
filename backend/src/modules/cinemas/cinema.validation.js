@@ -1,19 +1,14 @@
 const { z } = require('zod');
 
-// Schema validation using Zod
 const cinemaSchema = z.object({
-    tenRap: z.string()
+    TenRap: z.string()
         .min(2, 'Tên rạp phải có ít nhất 2 ký tự')
         .max(100, 'Tên rạp không quá 100 ký tự'),
-    diaChi: z.string()
+    DiaChi: z.string()
         .min(5, 'Địa chỉ phải có ít nhất 5 ký tự')
-        .max(200, 'Địa chỉ không quá 200 ký tự'),
-    sdt: z.string()
-        .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ'),
-    email: z.string()
-        .email('Email không hợp lệ')
-        .optional(),
-    trangThai: z.boolean().default(true)
+        .max(255, 'Địa chỉ không quá 255 ký tự'),
+    Hotline: z.string()
+        .regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ')
 });
 
 const cinemaUpdateSchema = cinemaSchema.partial();
