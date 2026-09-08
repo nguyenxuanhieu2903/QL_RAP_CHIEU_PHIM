@@ -6,10 +6,7 @@ const { authenticate } = require('../../middleware/auth.middleware');
 const { authorize } = require('../../middleware/role.middleware');
 const ROLES = require('../../constants/role.constant');
 
-// ============================================
 // PUBLIC ROUTES (Cần Login)
-// ============================================
-
 // Lấy danh sách phòng theo rạp (có phân trang)
 // GET /api/rooms?cinemaId=1&page=1&limit=10
 router.get('/', authenticate, roomsController.getAll.bind(roomsController));
@@ -29,7 +26,6 @@ router.get('/count', authenticate, roomsController.getCount.bind(roomsController
 // ============================================
 // ADMIN ROUTES
 // ============================================
-
 // Tạo phòng mới
 // POST /api/rooms
 router.post(

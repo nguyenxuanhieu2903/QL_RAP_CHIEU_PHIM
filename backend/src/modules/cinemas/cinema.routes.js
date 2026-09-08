@@ -7,9 +7,9 @@ const { authorize } = require('../../middleware/role.middleware');
 const ROLES = require('../../constants/role.constant');
 
 // Public routes
-router.get('/', cinemasController.getAll.bind(cinemasController));
+router.get('/', cinemasController.getAll.bind(cinemasController)); // danh sách
 router.get('/stats', cinemasController.getStats.bind(cinemasController));
-router.get('/:id', cinemasController.getById.bind(cinemasController));
+router.get('/:id', cinemasController.getById.bind(cinemasController));// chi tiết rạp
 
 // Admin only routes
 router.post(

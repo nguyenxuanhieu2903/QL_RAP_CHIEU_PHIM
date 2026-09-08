@@ -6,7 +6,7 @@ class CinemasRepository {
     // Lấy danh sách rạp 
     async findAll(page = 1, limit = 10, keyword = '') {
         try {
-            const pool = await getConnection();
+            const pool = await getConnection();  //Kết nối đến SQL Server
             const offset = (page - 1) * limit;
 
             let query = `
@@ -71,7 +71,7 @@ class CinemasRepository {
                     FROM RAP
                     WHERE MaRap = @MaRap
                 `);
-
+             // Nếu không có dữ liệu ->trả về null
             if (result.recordset.length === 0) {
                 return null;
             }
@@ -166,7 +166,7 @@ class CinemasRepository {
                 throw new NotFoundError('Không tìm thấy rạp');
             }
 
-            // Kiểm tra rạp có phòng không
+            // Kiểm tra rạp có phòng không (không cho xóa nếu có phòng)
             const roomCheck = await pool.request()
                 .input('MaRap', sql.Int, id)
                 .query(`

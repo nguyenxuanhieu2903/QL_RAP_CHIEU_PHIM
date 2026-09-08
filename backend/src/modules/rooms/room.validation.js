@@ -3,16 +3,16 @@ const { z } = require('zod');
 const roomSchema = z.object({
     MaRap: z.number()
         .int()
-        .positive('Mã rạp phải là số dương'),
+        .positive('Mã rạp không hợp lệ'), // phải số dương
     TenPhong: z.string()
         .min(1, 'Tên phòng không được để trống')
-        .max(100, 'Tên phòng không quá 100 ký tự'),
+        .max(50, 'Tên phòng không quá 50 ký tự'),
     TongSoGhe: z.number()
         .int()
         .min(1, 'Số lượng ghế tối thiểu là 1')
         .max(500, 'Số lượng ghế tối đa là 500')
 });
-
+// tất cả optional
 const roomUpdateSchema = roomSchema.partial();
 
 function validateCreateRoom(req, res, next) {

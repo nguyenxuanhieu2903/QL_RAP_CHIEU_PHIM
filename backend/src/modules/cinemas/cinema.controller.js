@@ -12,8 +12,8 @@ class CinemasController {
             const result = await cinemasService.getCinemas(page, limit, keyword);
             return paginatedResponse(
                 res,
-                result.items,
-                result.total,
+                result.items, // ds rạp
+                result.total, // tổng số 
                 page,
                 limit,
                 'Lấy danh sách rạp thành công'
@@ -22,7 +22,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // lấy chi tiết 1 rạp
     async getById(req, res) {
         try {
             const id = parseInt(req.params.id);
@@ -32,7 +32,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // tạo rạp mới 
     async create(req, res) {
         try {
             const cinema = await cinemasService.createCinema(req.body);
@@ -41,7 +41,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // cạp nhât
     async update(req, res) {
         try {
             const id = parseInt(req.params.id);
@@ -51,7 +51,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // xóa
     async delete(req, res) {
         try {
             const id = parseInt(req.params.id);
@@ -61,7 +61,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // thống kê
     async getStats(req, res) {
         try {
             const total = await cinemasService.countCinemas(true);
@@ -70,7 +70,7 @@ class CinemasController {
             this.handleError(res, error);
         }
     }
-
+    // xử lý lỗi 
     handleError(res, error) {
         if (error instanceof AppError) {
             return errorResponse(res, error.message, error.statusCode);

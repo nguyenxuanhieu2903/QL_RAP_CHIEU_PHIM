@@ -24,7 +24,7 @@ class RoomsRepository {
                     FROM PHONG_CHIEU 
                     WHERE MaRap = @MaRap
                 `);
-
+            // Lấy danh sách phòng (có JOIN với RAP để lấy tên rạp)
             const result = await pool.request()
                 .input('MaRap', sql.Int, cinemaId)
                 .input('offset', sql.Int, offset)
@@ -62,7 +62,7 @@ class RoomsRepository {
                     SELECT 
                         MaPhong,
                         TenPhong,
-                        TongSoGhe   -- ← Đã sửa từ SoLuongGhe
+                        TongSoGhe 
                     FROM PHONG_CHIEU
                     WHERE MaRap = @MaRap
                     ORDER BY TenPhong
@@ -101,6 +101,7 @@ class RoomsRepository {
     }
 
     // Kiểm tra tên phòng đã tồn tại
+    // Mỗi rạp không được có 2 phòng trùng tên
     async existsByName(cinemaId, tenPhong, excludeId = null) {
         try {
             const pool = await getConnection();
