@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const customerController = require('./customer.controller');
-const { verifyToken, authorize } = require('../../middleware/auth.middleware');
+const { validateCustomerUpdate } = require('./customer.validation');
 
-// Routes cho cá nhân khách hàng
-router.get('/me', verifyToken, authorize(['CUSTOMER']), customerController.getMe);
-router.put('/me', verifyToken, authorize(['CUSTOMER']), customerController.updateMe);
+router.get('/me', customerController.getCustomerMe);
+router.put('/me', validateCustomerUpdate, customerController.updateCustomerMe);
 
-// Routes cho Staff và Admin quản lý khách hàng
-router.get('/', verifyToken, authorize(['STAFF', 'ADMIN']), customerController.getAllCustomers);
-router.get('/:id', verifyToken, authorize(['STAFF', 'ADMIN']), customerController.getCustomerById);
-router.put('/:id', verifyToken, authorize(['STAFF', 'ADMIN']), customerController.updateCustomer);
+router.get('/', customerController.getAllCustomers);
+router.get('/:id', customerController.getCustomerById);
+router.put('/:id', validateCustomerUpdate, customerController.updateCustomer);
 
 module.exports = router;

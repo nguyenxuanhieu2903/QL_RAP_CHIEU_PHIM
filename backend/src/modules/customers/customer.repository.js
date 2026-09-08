@@ -1,12 +1,12 @@
 const sql = require('mssql');
 
-const getAll = async () => {
+const findAll = async () => {
     const pool = await sql.connect();
     const result = await pool.request().query('SELECT * FROM KHACH_HANG');
     return result.recordset;
 };
 
-const getById = async (id) => {
+const findById = async (id) => {
     const pool = await sql.connect();
     const result = await pool.request()
         .input('id', sql.Int, id)
@@ -14,42 +14,25 @@ const getById = async (id) => {
     return result.recordset[0];
 };
 
-const update = async (id, updateData) => {
+const update = async (id, customerData) => {
     const pool = await sql.connect();
-    // Giả định cập nhật các trường cơ bản như HoTen, SoDienThoai, Email
-    await pool.request()
-        .input('id', sql.Int, id)
-        .input('hoTen', sql.NVarChar, updateData.hoTen)
-        .input('soDienThoai', sql.VarChar, updateData.soDienThoai)
-        .input('email', sql.VarChar, updateData.email)
-        .query(`
-            UPDATE KHACH_HANG 
-            SET HoTen = ISNULL(@hoTen, HoTen),
-                SoDienThoai = ISNULL(@soDienThoai, SoDienThoai),
-                Email = ISNULL(@email, Email)
-            WHERE MaKhachHang = @id
-        `);
-    return await getById(id);
-};
+    const request = pool.request();
+    request.input('id', sql.Int, id);
+    request.input('hoTen', sql.NVarChar, customerData.hoTen);
+    request.input('soDienThoai', sql.VarChar, customerData.soDienThoai);
 
-const create = async (data) => {
-    const pool = await sql.connect();
-    const result = await pool.request()
-        .input('hoTen', sql.NVarChar, data.hoTen)
-        .input('soDienThoai', sql.VarChar, data.soDienThoai)
-        .input('email', sql.VarChar, data.email)
-        .input('matKhau', sql.VarChar, data.matKhau)
-        .query(`
-            INSERT INTO KHACH_HANG (HoTen, SoDienThoai, Email, MatKhau)
-            OUTPUT INSERTED.*
-            VALUES (@hoTen, @soDienThoai, @email, @matKhau)
-        `);
-    return result.recordset[0];
+    await request.query(`
+        UPDATE KHACH_HANG 
+        SET HoTen = ISNULL(@hoTen, HoTen), 
+            SoDienThoai = ISNULL(@soDienThoai, SoDienThoai)
+        WHERE MaKhachHang = @id
+    `);
+    
+    return await findById(id);
 };
 
 module.exports = {
-    getAll,
-    getById,
-    update,
-    create
+    findAll,
+    findById,
+    update
 };
